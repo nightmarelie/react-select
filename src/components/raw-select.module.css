@@ -49,6 +49,11 @@
   border-top-color: #777;
 }
 
+.caret:hover {
+  color: #333;
+  cursor: pointer;
+}
+
 .options {
   position: absolute;
   margin: 0;
@@ -66,7 +71,7 @@
   z-index: 100;
 }
 
-/* .options.show {
+.options.show {
   display: block;
 }
 
@@ -110,4 +115,4 @@
 .option-badge > .remove-btn {
   font-size: 1.25em;
   color: #777;
-} */
+}
