@@ -44,7 +44,7 @@
 }
 
 .caret {
-  translate: 0 25%;
+  transform: translate(0, 50%);
   border: 0.25em solid transparent;
   border-top-color: #777;
 }
