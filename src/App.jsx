@@ -1,7 +1,9 @@
+import { Select } from '@components'
+
 function App() {
   return (
     <div className="App">
-        Hello test
+        <Select />
     </div>
   )
 }
