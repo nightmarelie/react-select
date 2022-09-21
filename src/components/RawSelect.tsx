@@ -1,4 +1,11 @@
-import { FC, MouseEvent, useCallback, useEffect, useState } from "react";
+import {
+  FC,
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import styles from "./raw-select.module.css";
 
 export type SelectOption = {
@@ -34,7 +41,10 @@ export const Select: FC<SelectProps> = ({
   multiple = false,
 }) => {
   const [isOpen, setOpen] = useState(false);
-  const [highlightedIdx, setHighlightedIdx] = useState(0);
+  const [highlightedIdx, setHighlightedIdx] =
+    useState<keyof SelectProps["options"]>(0);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleOpenToggle = useCallback(
     () => setOpen((prevIsOpen) => !prevIsOpen),
@@ -69,6 +79,10 @@ export const Select: FC<SelectProps> = ({
     e.stopPropagation();
     const option = options[Number(e.currentTarget.dataset["value"])];
 
+    handleChooseOption(option);
+  };
+
+  const handleChooseOption = (option: SelectOption) => {
     if (isMultipleHandler(onChange)) {
       if (isMultipleValue(value)) {
         if (value.includes(option)) {
@@ -103,8 +117,45 @@ export const Select: FC<SelectProps> = ({
     isOpen && setHighlightedIdx(0);
   }, [isOpen]);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target != containerRef.current) return;
+      switch (e.code) {
+        case "Enter":
+        case "Space":
+          handleOpenToggle();
+          if (isOpen)
+            handleChooseOption(options[highlightedIdx] as SelectOption);
+          break;
+        case "ArrowUp":
+        case "ArrowDown": {
+          if (!isOpen) {
+            setOpen(true);
+            break;
+          }
+
+          const newValue =
+            (highlightedIdx as number) + (e.code === "ArrowDown" ? 1 : -1);
+          if (newValue >= 0 && newValue < options.length) {
+            setHighlightedIdx(newValue);
+          }
+          break;
+        }
+        case "Escape":
+          handleClose();
+          break;
+      }
+    };
+    containerRef.current?.addEventListener("keydown", handler);
+
+    return () => {
+      containerRef.current?.removeEventListener("keydown", handler);
+    };
+  }, [isOpen, highlightedIdx, options]);
+
   return (
     <div
+      ref={containerRef}
       tabIndex={0}
       className={styles.container}
       onClick={handleOpenToggle}
