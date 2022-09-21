@@ -1,7 +1,7 @@
-import { Select } from "@components";
+import { RawSelect } from "@components";
 
 function App() {
-  return <Select />;
+  return <RawSelect />;
 }
 
 export default App;
