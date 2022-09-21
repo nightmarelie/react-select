@@ -1,4 +1,4 @@
-import { FC, MouseEvent, SyntheticEvent, useCallback, useState } from "react";
+import { FC, MouseEvent, useCallback, useEffect, useState } from "react";
 import styles from "./raw-select.module.css";
 
 export type SelectOption = {
@@ -14,6 +14,7 @@ type SelectProps = {
 
 export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
   const [isOpen, setOpen] = useState(false);
+  const [highlightedIdx, setHighlightedIdx] = useState(0);
 
   const handleOpenToggle = useCallback(
     () => setOpen((prevIsOpen) => !prevIsOpen),
@@ -27,11 +28,33 @@ export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
     onChange(undefined);
   };
 
-  const selectOption = (e: MouseEvent<HTMLLIElement>) => {
+  const handleSelectOption = (e: MouseEvent<HTMLLIElement>) => {
+    const option = options[Number(e.currentTarget.dataset["value"])];
+
+    if (option === value) {
+      return;
+    }
+
     e.stopPropagation();
-    onChange(options[Number(e.currentTarget.dataset["value"])]);
+    onChange(option);
     handleClose();
   };
+
+  const isOptionSelected = (option: SelectOption) => {
+    return option === value;
+  };
+
+  const isHighlightedIdx = (idx: number) => {
+    return idx === highlightedIdx;
+  };
+
+  const handleHighlightedIdx = (e: MouseEvent<HTMLLIElement>) => {
+    setHighlightedIdx(Number(e.currentTarget.dataset["value"]));
+  };
+
+  useEffect(() => {
+    isOpen && setHighlightedIdx(0);
+  }, [isOpen]);
 
   return (
     <div
@@ -51,8 +74,11 @@ export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
           <li
             key={value}
             data-value={idx}
-            className={styles.option}
-            onClick={selectOption}
+            className={`${styles.option} ${
+              isOptionSelected(options[idx]) ? styles.selected : ""
+            } ${isHighlightedIdx(idx) ? styles.highlighted : ""}`}
+            onMouseEnter={handleHighlightedIdx}
+            onClick={handleSelectOption}
           >
             {label}
           </li>

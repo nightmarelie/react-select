@@ -81,12 +81,12 @@
 }
 
 .option.selected {
-  background-color: hsl(200, 100%, 70%);
+  background-color: hsl(200, 100%, 50%);
+  color: white;
 }
 
 .option.highlighted {
-  background-color: hsl(200, 100%, 50%);
-  color: white;
+  background-color: hsl(200, 100%, 70%);
 }
 
 .option-badge {

@@ -10,6 +10,10 @@ const options: RawSelectOption[] = [
     label: "Second name",
     value: "Anna",
   },
+  {
+    label: "Third name",
+    value: "Ylia",
+  },
 ];
 
 function App() {
