@@ -6,13 +6,33 @@ export type SelectOption = {
   value: string | number;
 };
 
-type SelectProps = {
-  options: SelectOption[];
+type SingleSelectProps = {
+  multiple?: false;
   value?: SelectOption;
   onChange: (value?: SelectOption) => void;
 };
 
-export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
+type MultipleSelectProps = {
+  multiple: true;
+  value: SelectOption[];
+  onChange: (value: SelectOption[]) => void;
+};
+
+type SelectProps = {
+  options: SelectOption[];
+} & (SingleSelectProps | MultipleSelectProps);
+
+type MultipleOnChange = MultipleSelectProps["onChange"];
+type SingleOnChange = SingleSelectProps["onChange"];
+type MultipleValue = MultipleSelectProps["value"];
+type SingleValue = SingleSelectProps["value"];
+
+export const Select: FC<SelectProps> = ({
+  value,
+  onChange,
+  options = [],
+  multiple = false,
+}) => {
   const [isOpen, setOpen] = useState(false);
   const [highlightedIdx, setHighlightedIdx] = useState(0);
 
@@ -23,25 +43,52 @@ export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
 
   const handleClose = useCallback(() => setOpen(false), []);
 
+  const isMultipleHandler = (
+    onChange: MultipleOnChange | SingleOnChange
+  ): onChange is MultipleOnChange => multiple;
+
+  const isMultipleValue = (
+    value: MultipleValue | SingleValue
+  ): value is MultipleValue => multiple;
+
   const clearOptions = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    onChange(undefined);
+    isMultipleHandler(onChange) ? onChange([]) : onChange(undefined);
+  };
+
+  const clearOption = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (isMultipleValue(value) && isMultipleHandler(onChange)) {
+      const option = value[Number(e.currentTarget.dataset["value"])];
+      onChange(value.filter((opt) => opt !== option));
+    }
   };
 
   const handleSelectOption = (e: MouseEvent<HTMLLIElement>) => {
+    e.stopPropagation();
     const option = options[Number(e.currentTarget.dataset["value"])];
 
-    if (option === value) {
-      return;
+    if (isMultipleHandler(onChange)) {
+      if (isMultipleValue(value)) {
+        if (value.includes(option)) {
+          onChange(value.filter((opt) => opt !== option));
+        } else {
+          onChange([...value, option]);
+        }
+      }
+    } else {
+      if (option === value) {
+        return;
+      }
+      onChange(option);
     }
 
-    e.stopPropagation();
-    onChange(option);
     handleClose();
   };
 
   const isOptionSelected = (option: SelectOption) => {
-    return option === value;
+    return isMultipleValue(value) ? value.includes(option) : option === value;
   };
 
   const isHighlightedIdx = (idx: number) => {
@@ -63,7 +110,21 @@ export const Select: FC<SelectProps> = ({ value, options = [], onChange }) => {
       onClick={handleOpenToggle}
       onBlur={handleClose}
     >
-      <span className={styles.value}>{value?.label}</span>
+      <span className={styles.value}>
+        {isMultipleValue(value)
+          ? value.map(({ value, label }, idx) => (
+              <button
+                key={value}
+                className={styles["option-badge"]}
+                data-value={idx}
+                onClick={clearOption}
+              >
+                {label}
+                <span className={styles["remove-btn"]}>&times;</span>
+              </button>
+            ))
+          : value?.label}
+      </span>
       <button className={styles["clear-btn"]} onClick={clearOptions}>
         &times;
       </button>
